@@ -1,0 +1,26 @@
+{
+  "name": "ftp-management-queue",
+  "version": "1.3.0",
+  "description": "Queue Management for FTP Server",
+  "main": "index.js",
+  "keywords": [
+    "kue",
+    "ftp",
+    "uploader",
+    "uploader queue"
+  ],
+  "dependencies": {
+    "async": "^2.6.1",
+    "cron": "^1.3.0",
+    "ftp": "^0.3.10",
+    "kue": "^0.11.6",
+    "lodash": "^4.17.10",
+    "underscore": "^1.9.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "OPTCentral",
+  "license": "ISC"
+}
