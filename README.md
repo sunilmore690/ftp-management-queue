@@ -28,7 +28,6 @@ const processFile = (params, cb) => {
    params = {
     fileName:<>,
     filePath:<>,
-    uploadType:'full/partial'
    }
   */
   if (!this.job) {
@@ -44,6 +43,7 @@ const processFile = (params, cb) => {
   },1000)
   setTimeout(function(){
     clearInterval(intervalObject)
+    cb()
   },10000)
 };
 
@@ -51,19 +51,16 @@ const options = {
   queue,
   fileFormats: [".csv"], //.csv,.xml,.xlsx
   numberOfProcess: {
-    brandManagerProcess: 1,//concurrency to monitor brand ftp server at a time for newly uploaded file
-    catalogBatchProcess: 1, //number of file process at a time
+    itemsManagerProcess: 1,//concurrency to monitor brand ftp server at a time for newly uploaded file
+    fileBatchProcess: 1, //number of file process at a time
     emailProcess: 2 // concurrency for sending email
   },
-  brands: [
+  items: [
     {
-      optId: "1",
+      id: "1",
       name: "Brand1",
       priority: "normal",//normal,high,medium
       // this used only when file format is xml to determine from which parent tag read the data
-      xml: {
-        parentTag: "stockFile.stockItem"
-      },
       ftp: {
         host: "localhost",
         port: 21,
@@ -76,13 +73,12 @@ const options = {
         processing: "/path/to/processing/dir",
         error: "/path/to/error/dir",
         processed: "/path/to/processed/dir",
-        ignore: "/path/to/ignore/dir",
         backup: "/path/to/backup/dir"
       }
     }
   ],
   cbemailfunction: sendEmail,
-  cbuploader: processFile,
+  customCallback: processFile,
   filePath: __dirname
 };
 

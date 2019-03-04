@@ -43,18 +43,16 @@ const options = {
   queue,
   fileFormats: [".csv"],
   numberOfProcess: {
-    brandManagerProcess: 1,
-    catalogBatchProcess: 1,
+    itemsManagerProcess: 1,
+    fileBatchProcess: 1,
     emailProcess: 2
   },
-  brands: [
+  items: [
     {
-      optId: "1",
+      id: "1",
       name: "Brand1",
       priority: "normal",
-      xml: {
-        parentTag: "stockFile.stockItem"
-      },
+     
       ftp: {
         host: "localhost",
         port: 21,
@@ -63,17 +61,17 @@ const options = {
         pass: "password"
       },
       dir: {
-        upload: "/imageprocessing/upload/",
-        enqueued: "/imageprocessing/enqueued/",
-        processing: "/imageprocessing/processing/",
-        error: "/imageprocessing/error/",
-        processed: "/imageprocessing/processed/",
-        backup: "/imageprocessing/backup/"
+        upload: "/upload/",
+        enqueued: "/enqueued/",
+        processing: "/processing/",
+        error: "/error/",
+        processed: "/processed/",
+        backup: "/backup/"
       }
     }
   ],
   cbemailfunction: sendEmail,
-  cbuploader: processFile,
+  customCallback: processFile,
   filePath: __dirname
 };
 
