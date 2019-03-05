@@ -115,7 +115,8 @@ class Uploader extends events {
       fileName: this.item.file.name,
       filePath: this.tempFile,
       uploadType: this.upload_type,
-      brand: this.item.brand
+      brand: this.item.brand,
+      id:this.item.id
     };
     this.cbuploader.call(this, param, (err, modifiedFile) => {
       if (err) return this.emit("error", err);
@@ -127,7 +128,7 @@ class Uploader extends events {
     let that = this;
     console.log("Modified File", this.modifiedFile);
 
-    if (!fs.existsSync(this.modifiedRemote)) {
+    if (!fs.existsSync(this.modifiedFile)) {
       this.modifiedFile = this.localFile;
     }
     this.job.log(
