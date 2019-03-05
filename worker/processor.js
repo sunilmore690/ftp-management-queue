@@ -19,7 +19,7 @@ let Uploader = require("./uploader"),
 module.exports = function(queue,cbuploader,globalPath,numberOfProcess) {
   console.log(globalPath);
   var brandHash ={};
-  queue.process("catalogbatchqueue", numberOfProcess, function(job, ctx, done) {
+  queue.process("processorqueue", numberOfProcess, function(job, ctx, done) {
     job.log("-----process----");
     let item = job.data;
     if (item != undefined && brandHash[job.data.optId] == undefined) {

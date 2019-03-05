@@ -89,9 +89,9 @@ uploader(options)
 
 ### How Uploader queue Management works?
 
-1. We’ve one scheduler , which will select one brand in sequence from list and add this brand to brandmanagerqueue
+1. We’ve one scheduler , which will select one brand in sequence from list and add this brand to managerqueue
 
-2.  For now, we’ve set only one processor for brandmanagerqueue . It’ll connect to ftp server &  list down all the Catalog Files from  upload dir for that brand and add these files to another queue 
+2.  For now, we’ve set only one processor for managerqueue . It’ll connect to ftp server &  list down all the Catalog Files from  upload dir for that brand and add these files to another queue 
 catalogbatchqeue and before adding these file to queue ,first we move the file from upload dir to enqueued dir
 
 3. While adding file to the queue we can give priority to that file, So it’ll pick file to process according to priority. 

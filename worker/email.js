@@ -3,7 +3,7 @@
 
 module.exports = function (queue, cbemailfunction,numberOfProcess) {
 
-  queue.process("email", numberOfProcess, cbemailfunction);
+  queue.process("emailqueue", numberOfProcess, cbemailfunction);
 
 }
 

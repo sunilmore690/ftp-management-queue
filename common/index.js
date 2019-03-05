@@ -47,7 +47,7 @@ let addBrandFileToQueue = function(queue, brand, file, priority, delay, cb) {
   }
   console.log("----Calling addBrandFileToQueue");
   var job = queue
-    .create("catalogbatchqueue", {
+    .create("processorqueue", {
       optId: brand.optId,
       brand,
       file,
@@ -84,7 +84,7 @@ let addBrandFileToQueue = function(queue, brand, file, priority, delay, cb) {
 const sendErrorEmail = function(queue, item, err) {
   console.log("Calling sendErrorEmail");
   var emailjob = queue
-    .create("email", { item: item, err: err, title: err })
+    .create("emailqueue", { item: item, err: err, title: err })
     .attempts(2)
     .save(function(err) {
       if (!err) console.log("emailjobid", emailjob.id);

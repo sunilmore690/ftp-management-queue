@@ -39,7 +39,7 @@ let selectRandomBrand = function(queue, brands, fileFormats) {
     priority = brand.priority;
   }
   var mangerjob = queue
-    .create("brandmanagerqueue", {
+    .create("managerqueue", {
       brand: brand,
       title: brand.name
     })
@@ -79,12 +79,12 @@ function isFileInSupportedFormat(name) {
 }
 
 let processQueue = (queue, numberOfProcess) => {
-  queue.process("brandmanagerqueue", numberOfProcess, async function(
+  queue.process("managerqueue", numberOfProcess, async function(
     job,
     ctx,
     done
   ) {
-    job.log("----Processing brandmanagerqueue-----", job.data.brand.optId);
+    job.log("----Processing managerqueue-----", job.data.brand.optId);
     let brand = job.data.brand;
     console.log("++++++++");
     console.log(brand);
