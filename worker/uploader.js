@@ -130,6 +130,8 @@ class Uploader extends events {
 
     if (!fs.existsSync(this.modifiedFile)) {
       this.modifiedFile = this.localFile;
+    }else{
+      that.item.file.name = this.modifiedFile.split('/')[1]
     }
     this.job.log(
       "UPLOADING SEAMLESS FILE TO " +
