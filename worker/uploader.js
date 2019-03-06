@@ -115,7 +115,7 @@ class Uploader extends events {
       fileName: this.item.file.name,
       filePath: this.tempFile,
       uploadType: this.upload_type,
-      brand: this.item.brand,
+      item: this.item.brand,
       id:this.item.id
     };
     this.cbuploader.call(this, param, (err, modifiedFile) => {
