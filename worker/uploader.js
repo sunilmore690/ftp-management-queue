@@ -32,12 +32,13 @@ class Uploader extends events {
   moveFileToProcessingDir() {
     console.log(this.item);
     console.log("36363636636363");
-
+    
     this.job.log("--------moveFileToProcessingDir-----------");
     var brand = this.item.brand,
       file = this.item.file,
       that = this;
     this.job.progress(10, 100);
+    this.fileName = file;
     this.ftpclient.rename(
       brand.dir.enqueued + file.name,
       brand.dir.processing + file.name,
@@ -191,7 +192,7 @@ class Uploader extends events {
     common.uploadFile(
       that.item.brand.ftp,
       this.localFile,
-      that.item.brand.dir.backup + "/" + that.item.file.name,
+      that.item.brand.dir.backup + "/" + that.fileName,
       function(err) {
         // fs.unlinkSync(that.localFile);
         // if (err) return that.emit("error", err);
