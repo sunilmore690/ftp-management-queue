@@ -2,6 +2,8 @@ let Uploader = require("./uploader"),
   kue = require("kue"),
   common = require("../common/index");
 
+  const fs = require('fs')
+
   let moveFileToErrorDir = function(item) {
     console.log("----Moving file from processing to error ---", item.file);
    common.moveFile(
@@ -14,7 +16,14 @@ let Uploader = require("./uploader"),
     );
   };
   
+const deleteLocalFile = function(files){
+  files.forEach(function(file){
+    
+    fs.unlinkSync(file)
+  })
 
+  
+}
 
 module.exports = function(queue,cbuploader,globalPath,numberOfProcess) {
   console.log(globalPath);
@@ -31,6 +40,7 @@ module.exports = function(queue,cbuploader,globalPath,numberOfProcess) {
         console.log(err);
         delete brandHash[job.data.optId];
         moveFileToErrorDir(item);
+        deleteLocalFile([uploader.localFile,uploader.modifiedFile])
         common.sendErrorEmail(queue,uploader.item, err.message);
         done(err);
       });
@@ -38,6 +48,7 @@ module.exports = function(queue,cbuploader,globalPath,numberOfProcess) {
         job.progress(90, 100);
         console.log("done", message);
         delete brandHash[job.data.optId];
+        deleteLocalFile([uploader.localFile,uploader.modifiedFile])
         // moveFileToProcessedDir(message);
         done(null, item);
       });
