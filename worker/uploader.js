@@ -122,6 +122,7 @@ class Uploader extends events {
     this.cbuploader.call(this, param, (err, modifiedFile) => {
       if (err) return this.emit("error", err);
       that.modifiedFile = modifiedFile;
+      that.isModified = !!modifiedFile;
       that.uploadModified();
     });
   }
@@ -130,6 +131,7 @@ class Uploader extends events {
     console.log("Modified File", this.modifiedFile);
 
     if (!fs.existsSync(this.modifiedFile)) {
+    
       this.modifiedFile = this.localFile;
     }else{
       that.item.file.name = this.modifiedFile.split('/')[this.modifiedFile.split('/').length-1];
@@ -180,6 +182,7 @@ class Uploader extends events {
               that.item.file.name
           );
         }
+        
         that.moveToBackup();
       }
     );
@@ -189,11 +192,10 @@ class Uploader extends events {
     console.log("Moving file to backup");
 
     this.job.log("MOVING FILE TO BACKUP DIR");
-    common.moveFile(
+    common.uploadFile(
       that.item.brand.ftp,
-      that.item.brand.dir.processing + "/" + that.fileName,
+      this.localFile,
       that.item.brand.dir.backup + "/" + that.fileName,
-     
       function(err) {
         // fs.unlinkSync(that.localFile);
         // if (err) return that.emit("error", err);
