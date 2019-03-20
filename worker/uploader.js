@@ -38,7 +38,7 @@ class Uploader extends events {
       file = this.item.file,
       that = this;
     this.job.progress(10, 100);
-    this.fileName = file;
+    this.fileName = file.name;
     this.ftpclient.rename(
       brand.dir.enqueued + file.name,
       brand.dir.processing + file.name,
@@ -189,10 +189,11 @@ class Uploader extends events {
     console.log("Moving file to backup");
 
     this.job.log("MOVING FILE TO BACKUP DIR");
-    common.uploadFile(
+    common.moveFile(
       that.item.brand.ftp,
-      this.localFile,
+      that.item.brand.dir.processing + "/" + that.fileName,
       that.item.brand.dir.backup + "/" + that.fileName,
+     
       function(err) {
         // fs.unlinkSync(that.localFile);
         // if (err) return that.emit("error", err);
