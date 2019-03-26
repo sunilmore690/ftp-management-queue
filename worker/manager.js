@@ -6,7 +6,9 @@ let CronJob = require("cron").CronJob,
 var path = require("path");
 var supportedFormat;
 
-module.exports = function(queue, brands, fileFormats, numberOfProcess,kue) {
+var kue;
+module.exports = function(queue, brands, fileFormats, numberOfProcess,Kue) {
+  kue = Kue
   supportedFormat = fileFormats;
   console.log("in managaer");
   console.log(supportedFormat);
