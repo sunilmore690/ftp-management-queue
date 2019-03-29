@@ -13,7 +13,7 @@ module.exports = function(queue, brands, fileFormats, numberOfProcess,Kue) {
   console.log("in managaer");
   console.log(supportedFormat);
   var job = new CronJob({
-    cronTime: "*/10 * * * * *", //every 5 second
+    cronTime: "*/10 * * * * ", //every 5 second
     onTick: function() {
       console.log("----- Manager Cron ------");
       selectRandomBrand(queue, brands, fileFormats);
