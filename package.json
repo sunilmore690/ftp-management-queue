@@ -1,6 +1,6 @@
 {
   "name": "ftp-management-queue",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Queue Management for FTP Server",
   "main": "index.js",
   "keywords": [
@@ -15,6 +15,7 @@
     "ftp": "^0.3.10",
     "kue": "^0.11.6",
     "lodash": "^4.17.10",
+    "ssh2-sftp-client": "^2.5.0",
     "underscore": "^1.9.1"
   },
   "devDependencies": {},

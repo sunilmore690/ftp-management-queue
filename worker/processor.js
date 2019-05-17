@@ -10,6 +10,7 @@ let moveFileToErrorDir = function(item) {
     item.brand.ftp,
     item.brand.dir.processing + item.file.name,
     item.brand.dir.error + item.file.name,
+    item.brand.type,
     function(err) {
       console.log(err);
     }
