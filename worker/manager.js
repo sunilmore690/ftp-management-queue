@@ -91,7 +91,11 @@ function isFileInSupportedFormat(name) {
 }
 
 let processQueue = (queue, numberOfProcess) => {
-  queue.process(processNames.manager, numberOfProcess, async function(job, ctx, done) {
+  queue.process(processNames.manager, numberOfProcess, async function(
+    job,
+    ctx,
+    done
+  ) {
     job.log("----Processing managerqueue-----", job.data.brand.optId);
     let brand = job.data.brand;
     brand = { ...brand, type: brand.type || "ftp" };
@@ -192,7 +196,11 @@ let addBrandFileToQueue = function(queue, job, brand, file, priority, cb) {
             brand.dir.upload + file.name,
             brand.dir.enqueued + file.name,
             function(err) {
-              if (err) job.log(err);
+              if (err) {
+                job.log(err);
+                callback(err);
+              }
+              callback();
               ftp.end();
             }
           );
@@ -200,22 +208,21 @@ let addBrandFileToQueue = function(queue, job, brand, file, priority, cb) {
           console.log("in add brand managere queque");
           sftp = new SftpClient();
 
-          await sftp
+          sftp
             .connect(brand.ftp)
-            .then(function() {})
-            .catch(function(err) {
-              console.log(err);
+            .then(() => {
+              return sftp.rename(
+                brand.dir.upload + file.name,
+                brand.dir.enqueued + file.name
+              );
+            })
+            .then(data => {
+              console.log(data, "the data info");
               callback();
-            });
-
-          await sftp
-            .rename(
-              brand.dir.upload + file.name,
-              brand.dir.enqueued + file.name
-            )
-            .then(function(data) {
-              console.log(data);
-              sftp.end();
+            })
+            .catch(err => {
+              console.log(err, "catch error");
+              callback(err);
             });
         }
 
@@ -249,31 +256,32 @@ let addBrandFileToQueue = function(queue, job, brand, file, priority, cb) {
 let getFiles = function(brand) {
   // Return new promise
   return new Promise(async function(resolve, reject) {
-    if (brand.type == "ftp") {
-      let ftp = new FtpClient();
-      ftp.connect(brand.ftp);
-      ftp.on("error", function(err) {
-        reject(err);
-      });
-      ftp.on("ready", () => {
-        ftp.list(brand.dir.upload, function(err, list) {
-          if (err) return reject(err);
-          resolve(list);
-          ftp.end();
+    try {
+      if (brand.type == "ftp") {
+        let ftp = new FtpClient();
+        ftp.connect(brand.ftp);
+        ftp.on("error", function(err) {
+          reject(err);
         });
-      });
-    } else {
-      let sftp = new SftpClient();
-      console.log("connecting to sftp....");
-      console.log(brand.ftp);
-      await sftp.connect(brand.ftp).catch(function(err) {
-        console.log(err);
-        reject(err);
-      });
-      console.log(brand.dir.upload);
-      let getList = await sftp.list(brand.dir.upload);
-      console.log(getList);
-      resolve(getList);
+        ftp.on("ready", () => {
+          ftp.list(brand.dir.upload, function(err, list) {
+            if (err) return reject(err);
+            resolve(list);
+            ftp.end();
+          });
+        });
+      } else {
+        let sftp = new SftpClient();
+        console.log("connecting to sftp....");
+        console.log(brand.ftp);
+        await sftp.connect(brand.ftp).console.log(brand.dir.upload);
+        let getList = await sftp.list(brand.dir.upload);
+        console.log(getList);
+        resolve(getList);
+        sftp.end();
+      }
+    } catch (e) {
+      reject(e);
     }
   });
 };

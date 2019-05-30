@@ -1,6 +1,6 @@
 {
   "name": "ftp-management-queue",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Queue Management for FTP Server",
   "main": "index.js",
   "keywords": [
