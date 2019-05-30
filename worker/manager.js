@@ -98,7 +98,10 @@ let processQueue = (queue, numberOfProcess) => {
   ) {
     job.log("----Processing managerqueue-----", job.data.brand.optId);
     let brand = job.data.brand;
-    brand = { ...brand, type: brand.type || "ftp" };
+    brand = {
+      ...brand,
+      type: brand.type || "ftp"
+    };
     console.log("++++++++");
     console.log(brand);
     try {
@@ -159,7 +162,10 @@ let manageFiles = async function(queue, old_files, job, brand, done) {
         addBrandFileToQueue(
           queue,
           job,
-          { ...brand, type: brand.type || "ftp" },
+          {
+            ...brand,
+            type: brand.type || "ftp"
+          },
           file,
           priority,
           cb
@@ -182,7 +188,7 @@ let addBrandFileToQueue = function(queue, job, brand, file, priority, cb) {
   job.log("----Calling addBrandFileToQueue");
   async_lib.series(
     {
-      moveFileToEnqueued: async function(callback) {
+      moveFileToEnqueued: function(callback) {
         job.log("--Moving file to enqueued");
         if (brand.type == "ftp") {
           let ftp = new FtpClient();
@@ -206,36 +212,43 @@ let addBrandFileToQueue = function(queue, job, brand, file, priority, cb) {
           );
         } else {
           console.log("in add brand managere queque");
-          sftp = new SftpClient();
+          try {
+            sftp = new SftpClient();
+            sftp
+              .connect(brand.ftp)
+              .then(function() {
+                return sftp.rename(
+                  brand.dir.upload + file.name,
+                  brand.dir.enqueued + file.name
+                );
+              })
+              .then(function(data) {
+                console.log(data);
+                sftp.end();
+                console.log("calling callback");
+                return callback();
+              })
+              .catch(function(err) {
+                console.log(" 226");
+                console.log(err);
+              });
+          } catch (e) {
+            callback(e);
+          }
 
-          sftp
-            .connect(brand.ftp)
-            .then(() => {
-              return sftp.rename(
-                brand.dir.upload + file.name,
-                brand.dir.enqueued + file.name
-              );
-            })
-            .then(data => {
-              console.log(data, "the data info");
-              callback();
-            })
-            .catch(err => {
-              console.log(err, "catch error");
-              callback(err);
-            });
+          job.log(
+            "move file from " +
+              brand.dir.upload +
+              file.name +
+              " to " +
+              brand.dir.enqueued +
+              file.name
+          );
         }
-
-        job.log(
-          "move file from " +
-            brand.dir.upload +
-            file.name +
-            " to " +
-            brand.dir.enqueued +
-            file.name
-        );
       },
       addtoqueue: function(callback) {
+        console.log("--Adding File to queue", file.name);
+
         job.log("--Adding File to queue", file.name);
         common.addBrandFileToQueue(
           queue,

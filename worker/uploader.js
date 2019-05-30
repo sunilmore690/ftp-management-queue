@@ -28,6 +28,7 @@ class Uploader extends events {
 
     if (this.item.brand.type == "ftp") {
       this.ftpclient.connect(this.item.brand.ftp);
+      this.moveFileToProcessingDir();
       this.ftpclient.on("error", function(err) {
         that.emit("error", err);
       });
@@ -36,6 +37,7 @@ class Uploader extends events {
         .connect(this.item.brand.ftp)
         .then(() => {
           console.log("sftp connected...  37373773");
+          that.moveFileToProcessingDir();
         })
         .catch(err => {
           that.emit("error", err);
@@ -44,7 +46,6 @@ class Uploader extends events {
     }
 
     // that.emit("error", { message: "Custom Error" });
-    this.moveFileToProcessingDir();
   }
   moveFileToProcessingDir() {
     console.log(this.item);
@@ -87,14 +88,13 @@ class Uploader extends events {
         .then(function(data) {
           console.log(data);
           console.log("move file");
+          that.downloadFileFromFtp();
         })
         .catch(function(err) {
           that.emit("error", err);
           return;
         });
     }
-
-    this.downloadFileFromFtp();
   }
   downloadFileFromFtp() {
     if (!fs.existsSync(this.globalPath + "/temp/")) {
@@ -221,8 +221,8 @@ class Uploader extends events {
     var that = this;
     common.moveFile(
       that.item.brand.ftp,
-      that.item.brand.dir.processing + "/" + that.item.file.name,
-      that.item.brand.dir.processed + "/" + that.item.file.name,
+      that.item.brand.dir.processing + that.item.file.name,
+      that.item.brand.dir.processed + that.item.file.name,
       this.item.brand.type,
       function(err) {
         if (err) {
