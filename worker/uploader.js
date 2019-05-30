@@ -1,15 +1,16 @@
 let events = require("events"),
   FtpClient = require("ftp"),
-  SftpClient = require('ssh2-sftp-client');
-fs = require("fs"),
-  common = require("../common"),
-  path = require("path"),
-  _ = require("underscore");
+  SftpClient = require("ssh2-sftp-client");
+(fs = require("fs")),
+  (common = require("../common")),
+  (path = require("path")),
+  (_ = require("underscore"));
 
 class Uploader extends events {
-  constructor(item, job, globalPath, queue) {
+  constructor(item, job, globalPath, queue, processNames) {
     super();
     this.producterrors = [];
+    this.processNames = processNames;
     this.queue = queue;
     this.item = item;
     this.job = job;
@@ -18,29 +19,29 @@ class Uploader extends events {
 
     this.upload_type = common.getUploadType(this.item.file.name);
     this.job.log("--UPLOAD TYPE--", this.upload_type);
-    if (this.item.brand.type == 'ftp')
-      this.ftpclient = new FtpClient();
-    else
-      this.sftpclient = new SftpClient();
+    if (this.item.brand.type == "ftp") this.ftpclient = new FtpClient();
+    else this.sftpclient = new SftpClient();
   }
   async start() {
     var that = this;
     this.job.log("--------Start-----------");
 
-    if (this.item.brand.type == 'ftp') {
+    if (this.item.brand.type == "ftp") {
       this.ftpclient.connect(this.item.brand.ftp);
-      this.ftpclient.on("error", function (err) {
+      this.ftpclient.on("error", function(err) {
         that.emit("error", err);
       });
     } else {
-      await this.sftpclient.connect(this.item.brand.ftp).then(() => {
-        console.log('sftp connected...  37373773');
-      }).catch((err) => {
-        that.emit("error", err);
-        console.log(err, 'catch error');
-      });
+      await this.sftpclient
+        .connect(this.item.brand.ftp)
+        .then(() => {
+          console.log("sftp connected...  37373773");
+        })
+        .catch(err => {
+          that.emit("error", err);
+          console.log(err, "catch error");
+        });
     }
-
 
     // that.emit("error", { message: "Custom Error" });
     this.moveFileToProcessingDir();
@@ -55,20 +56,20 @@ class Uploader extends events {
       that = this;
     this.job.progress(10, 100);
     this.fileName = file.name;
-    if (this.item.brand.type == 'ftp') {
+    if (this.item.brand.type == "ftp") {
       this.ftpclient.rename(
         brand.dir.enqueued + file.name,
         brand.dir.processing + file.name,
-        function (err) {
+        function(err) {
           // that.ftpclient.end();
           if (err) {
             that.job.log(
               "Ftp Error: moving file from " +
-              brand.dir.enqueued +
-              file.name +
-              " to" +
-              brand.dir.processing +
-              file.name
+                brand.dir.enqueued +
+                file.name +
+                " to" +
+                brand.dir.processing +
+                file.name
             );
             that.emit("error", err);
             return;
@@ -77,14 +78,20 @@ class Uploader extends events {
         }
       );
     } else {
-      console.log("in else part")
-      this.sftpclient.rename(brand.dir.enqueued + file.name, brand.dir.processing + file.name).then(function (data) {
-        console.log(data)
-        console.log('move file');
-      }).catch(function(err){
-        that.emit("error", err);
-        return
-      })
+      console.log("in else part");
+      this.sftpclient
+        .rename(
+          brand.dir.enqueued + file.name,
+          brand.dir.processing + file.name
+        )
+        .then(function(data) {
+          console.log(data);
+          console.log("move file");
+        })
+        .catch(function(err) {
+          that.emit("error", err);
+          return;
+        });
     }
 
     this.downloadFileFromFtp();
@@ -108,10 +115,10 @@ class Uploader extends events {
     this.job.log(
       "localfile",
       this.globalPath +
-      "/temp/" +
-      this.item.brand.optId +
-      "/" +
-      that.item.file.name
+        "/temp/" +
+        this.item.brand.optId +
+        "/" +
+        that.item.file.name
     );
     this.localFile =
       this.globalPath +
@@ -120,15 +127,14 @@ class Uploader extends events {
       "/" +
       that.item.file.name;
 
-
-    if (this.item.brand.type == 'ftp') {
+    if (this.item.brand.type == "ftp") {
       this.ftpclient.get(
         this.item.brand.dir.processing + this.item.file.name,
-        function (err, stream) {
+        function(err, stream) {
           // that.ftpclient.end();
           console.log("error", err);
           if (err) return that.emit("error", err);
-          stream.once("close", function () {
+          stream.once("close", function() {
             that.ftpclient.end();
             if (that.cbuploader && typeof that.cbuploader == "function") {
               return that.customuploader();
@@ -140,17 +146,20 @@ class Uploader extends events {
         }
       );
     } else {
-      this.sftpclient.fastGet(this.item.brand.dir.processing + this.item.file.name, brandTempDir + that.item.file.name, (err) => {
-        if (err) that.emit("error", err)
-        console.log('Downloaded to ' + brandTempDir + that.item.file.name);
-        this.sftpclient.end()
-        if (that.cbuploader && typeof that.cbuploader == "function") {
-          return that.customuploader();
-        } else {
-          return
+      this.sftpclient.fastGet(
+        this.item.brand.dir.processing + this.item.file.name,
+        brandTempDir + that.item.file.name,
+        err => {
+          if (err) that.emit("error", err);
+          console.log("Downloaded to " + brandTempDir + that.item.file.name);
+          this.sftpclient.end();
+          if (that.cbuploader && typeof that.cbuploader == "function") {
+            return that.customuploader();
+          } else {
+            return;
+          }
         }
-        
-      });
+      );
     }
   }
 
@@ -175,15 +184,16 @@ class Uploader extends events {
     console.log("Modified File", this.modifiedFile);
 
     if (!fs.existsSync(this.modifiedFile)) {
-
       this.modifiedFile = this.localFile;
     } else {
-      that.item.file.name = this.modifiedFile.split('/')[this.modifiedFile.split('/').length - 1];
+      that.item.file.name = this.modifiedFile.split("/")[
+        this.modifiedFile.split("/").length - 1
+      ];
     }
     this.job.log(
       "UPLOADING SEAMLESS FILE TO " +
-      that.item.brand.dir.processing +
-      that.item.file.name
+        that.item.brand.dir.processing +
+        that.item.file.name
     );
 
     common.uploadFile(
@@ -191,11 +201,12 @@ class Uploader extends events {
       that.modifiedFile,
       that.item.brand.dir.processing + that.item.file.name,
       this.item.brand.type,
-      function (err) {
+      function(err) {
         if (err)
           return that.emit("error", {
             file: that.item.brand.dir.processing + "/" + that.item.file.name,
-            message: "Error in uploading seamless file to " +
+            message:
+              "Error in uploading seamless file to " +
               that.item.brand.dir.processing +
               that.item.file.name
           });
@@ -206,14 +217,14 @@ class Uploader extends events {
     );
   }
   done() {
-    this.job.log("Moving file from processing to processed");
+    this.job.log("Movingitg file from processing to processed");
     var that = this;
     common.moveFile(
       that.item.brand.ftp,
       that.item.brand.dir.processing + "/" + that.item.file.name,
       that.item.brand.dir.processed + "/" + that.item.file.name,
       this.item.brand.type,
-      function (err) {
+      function(err) {
         if (err) {
           that.job.log("Error in moving processing to processed " + err);
           // that.emit('error',)
@@ -221,11 +232,11 @@ class Uploader extends events {
           common.sendErrorEmail(
             that.queue,
             that.item,
-            that.item.brand.dir.processing +
-            that.item.file.name +
-            " move to " +
-            that.item.brand.dir.processed +
-            that.item.file.name
+            `${that.item.brand.dir.processing}
+              ${that.item.file.name} move to 
+              ${that.item.brand.dir.processed} 
+              ${that.item.file.name}`,
+            that.processNames.email
           );
         }
 
@@ -243,7 +254,7 @@ class Uploader extends events {
       this.localFile,
       that.item.brand.dir.backup + "/" + that.fileName,
       this.item.brand.type,
-      function (err) {
+      function(err) {
         // fs.unlinkSync(that.localFile);
         // if (err) return that.emit("error", err);
 

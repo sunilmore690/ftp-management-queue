@@ -1,21 +1,30 @@
 let CronJob = require("cron").CronJob,
   async_lib = require("async"),
   FtpClient = require("ftp"),
-  SftpClient = require('ssh2-sftp-client'),
+  SftpClient = require("ssh2-sftp-client"),
   common = require("../common/index"),
   _ = require("lodash");
 var path = require("path");
 var supportedFormat;
 
 var kue;
-module.exports = function (queue, brands, fileFormats, numberOfProcess, Kue) {
-  kue = Kue
+var processNames;
+module.exports = function(
+  queue,
+  brands,
+  fileFormats,
+  numberOfProcess,
+  Kue,
+  processame
+) {
+  kue = Kue;
+  processNames = processame;
   supportedFormat = fileFormats;
   console.log("in managaer");
   console.log(supportedFormat);
   var job = new CronJob({
     cronTime: "*/20 * * * * *", //every 5 second
-    onTick: function () {
+    onTick: function() {
       console.log("----- Manager Cron ------");
       selectRandomBrand(queue, brands, fileFormats);
     },
@@ -28,7 +37,7 @@ module.exports = function (queue, brands, fileFormats, numberOfProcess, Kue) {
 };
 
 var i = 0;
-let selectRandomBrand = function (queue, brands, fileFormats) {
+let selectRandomBrand = function(queue, brands, fileFormats) {
   let items = brands;
   let length = items.length;
   if (items.length == i) {
@@ -42,33 +51,33 @@ let selectRandomBrand = function (queue, brands, fileFormats) {
     priority = brand.priority;
   }
   var mangerjob = queue
-    .create("managerqueue", {
+    .create(processNames.manager, {
       brand: brand,
       title: brand.name
     })
     .priority(priority)
-    .save(function (err) {
+    .save(function(err) {
       if (!err) console.log("managerjobid", mangerjob.id);
       if (err) console.log("brand queueerr", err);
     });
   mangerjob
-    .on("complete", function (id, result) {
+    .on("complete", function(id, result) {
       console.log(" mangerjob Job completed with data ", result);
-      kue.Job.get(mangerjob.id, function (err, job) {
+      kue.Job.get(mangerjob.id, function(err, job) {
         if (err) return;
-        job.remove(function (err) {
+        job.remove(function(err) {
           if (err) throw err;
           console.log("removed completed mangerjob #%d", job.id);
         });
       });
     })
-    .on("failed attempt", function (errorMessage, doneAttempts) {
+    .on("failed attempt", function(errorMessage, doneAttempts) {
       console.log("mangerjob failed attempt");
     })
-    .on("failed", function (errorMessage) {
+    .on("failed", function(errorMessage) {
       console.log("mangerjob failed", errorMessage);
     })
-    .on("progress", function (progress, data) {
+    .on("progress", function(progress, data) {
       console.log(
         "\r  job #" + job.id + " " + progress + "% complete with data ",
         data
@@ -82,19 +91,15 @@ function isFileInSupportedFormat(name) {
 }
 
 let processQueue = (queue, numberOfProcess) => {
-  queue.process("managerqueue", numberOfProcess, async function (
-    job,
-    ctx,
-    done
-  ) {
+  queue.process(processNames.manager, numberOfProcess, async function(job, ctx, done) {
     job.log("----Processing managerqueue-----", job.data.brand.optId);
     let brand = job.data.brand;
-    brand = {...brand,type:brand.type||'ftp'}
+    brand = { ...brand, type: brand.type || "ftp" };
     console.log("++++++++");
     console.log(brand);
     try {
       var old_files = await getFiles(brand);
-      setTimeout(function () {
+      setTimeout(function() {
         manageFiles(queue, old_files, job, brand, done);
       }, 10000);
     } catch (e) {
@@ -104,7 +109,7 @@ let processQueue = (queue, numberOfProcess) => {
   });
 };
 
-let manageFiles = async function (queue, old_files, job, brand, done) {
+let manageFiles = async function(queue, old_files, job, brand, done) {
   try {
     var files = [];
     files = await getFiles(brand);
@@ -112,7 +117,7 @@ let manageFiles = async function (queue, old_files, job, brand, done) {
     console.log("Before files", old_files.length);
     console.log("After files", files.length);
 
-    files = _.filter(files, function (file) {
+    files = _.filter(files, function(file) {
       //to check is it file
       if (file.type != "-") return false;
 
@@ -140,16 +145,23 @@ let manageFiles = async function (queue, old_files, job, brand, done) {
     }
     async_lib.eachSeries(
       files,
-      function (file, cb) {
+      function(file, cb) {
         job.log(
           `Brand : ${JSON.stringify(brand.name)} File: ${JSON.stringify(
             file.name
           )}`
         );
 
-        addBrandFileToQueue(queue, job, {...brand,type:brand.type || 'ftp'}, file, priority, cb);
+        addBrandFileToQueue(
+          queue,
+          job,
+          { ...brand, type: brand.type || "ftp" },
+          file,
+          priority,
+          cb
+        );
       },
-      function () {
+      function() {
         job.log("---All files added to queue -----");
         console.log("--All files finished---");
         done(null, brand);
@@ -160,14 +172,15 @@ let manageFiles = async function (queue, old_files, job, brand, done) {
   }
 };
 
-let addBrandFileToQueue = function (queue, job, brand, file, priority, cb) {
-  cb = cb || function () {};
+let addBrandFileToQueue = function(queue, job, brand, file, priority, cb) {
+  cb = cb || function() {};
   var that = this;
   job.log("----Calling addBrandFileToQueue");
-  async_lib.series({
-      moveFileToEnqueued: async function (callback) {
+  async_lib.series(
+    {
+      moveFileToEnqueued: async function(callback) {
         job.log("--Moving file to enqueued");
-        if (brand.type == 'ftp') {
+        if (brand.type == "ftp") {
           let ftp = new FtpClient();
           ftp.connect(brand.ftp);
           ftp.on("error", err => {
@@ -183,35 +196,39 @@ let addBrandFileToQueue = function (queue, job, brand, file, priority, cb) {
               ftp.end();
             }
           );
-
         } else {
-          console.log("in add brand managere queque")
+          console.log("in add brand managere queque");
           sftp = new SftpClient();
 
-          await sftp.connect(brand.ftp).then(function () {}).catch(function(err){
-            console.log(err);
-            callback();
-          })
+          await sftp
+            .connect(brand.ftp)
+            .then(function() {})
+            .catch(function(err) {
+              console.log(err);
+              callback();
+            });
 
-           await sftp.rename(brand.dir.upload + file.name,  brand.dir.enqueued + file.name).then(function (data) {
+          await sftp
+            .rename(
+              brand.dir.upload + file.name,
+              brand.dir.enqueued + file.name
+            )
+            .then(function(data) {
               console.log(data);
               sftp.end();
-            })
+            });
+        }
 
-          }
-        
-       
         job.log(
           "move file from " +
-          brand.dir.upload +
-          file.name +
-          " to " +
-          brand.dir.enqueued +
-          file.name
+            brand.dir.upload +
+            file.name +
+            " to " +
+            brand.dir.enqueued +
+            file.name
         );
-
       },
-      addtoqueue: function (callback) {
+      addtoqueue: function(callback) {
         job.log("--Adding File to queue", file.name);
         common.addBrandFileToQueue(
           queue,
@@ -219,27 +236,27 @@ let addBrandFileToQueue = function (queue, job, brand, file, priority, cb) {
           file,
           priority,
           null,
+          processNames.processor,
           callback
         );
       }
     },
-    function (err) {
+    function(err) {
       cb();
     }
   );
 };
-let getFiles =  function (brand) {
+let getFiles = function(brand) {
   // Return new promise
-  return new Promise( async function (resolve, reject) {
-
-    if (brand.type == 'ftp') {
+  return new Promise(async function(resolve, reject) {
+    if (brand.type == "ftp") {
       let ftp = new FtpClient();
       ftp.connect(brand.ftp);
-      ftp.on("error", function (err) {
+      ftp.on("error", function(err) {
         reject(err);
       });
       ftp.on("ready", () => {
-        ftp.list(brand.dir.upload, function (err, list) {
+        ftp.list(brand.dir.upload, function(err, list) {
           if (err) return reject(err);
           resolve(list);
           ftp.end();
@@ -247,18 +264,16 @@ let getFiles =  function (brand) {
       });
     } else {
       let sftp = new SftpClient();
-      console.log("connecting to sftp....")
+      console.log("connecting to sftp....");
       console.log(brand.ftp);
-        await  sftp.connect(brand.ftp).catch(function (err) {
+      await sftp.connect(brand.ftp).catch(function(err) {
         console.log(err);
-          reject(err)
-      })
-      console.log(brand.dir.upload)
-      let getList = await  sftp.list(brand.dir.upload);
-      console.log(getList)
-      resolve(getList)
+        reject(err);
+      });
+      console.log(brand.dir.upload);
+      let getList = await sftp.list(brand.dir.upload);
+      console.log(getList);
+      resolve(getList);
     }
-
-
   });
 };

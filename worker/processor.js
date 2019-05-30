@@ -24,16 +24,17 @@ const deleteLocalFile = function(files) {
     }
   });
 };
-
-module.exports = function(queue, cbuploader, globalPath, numberOfProcess) {
+var processNames
+module.exports = function(queue, cbuploader, globalPath, numberOfProcess,processname) {
+  processNames = processname
   console.log(globalPath);
   var brandHash = {};
-  queue.process("processorqueue", numberOfProcess, function(job, ctx, done) {
+  queue.process(processNames.processor, numberOfProcess, function(job, ctx, done) {
     job.log("-----process----");
     let item = job.data;
     if (item != undefined && brandHash[job.data.optId] == undefined) {
       brandHash[job.data.optId] = 1;
-      let uploader = new Uploader(item, job, globalPath, queue);
+      let uploader = new Uploader(item, job, globalPath, queue,processNames);
       uploader.cbuploader = cbuploader;
       uploader.on("error", function(err) {
         console.log("++++error++++++");
@@ -41,7 +42,7 @@ module.exports = function(queue, cbuploader, globalPath, numberOfProcess) {
         delete brandHash[job.data.optId];
         moveFileToErrorDir(item);
         deleteLocalFile([uploader.localFile, uploader.modifiedFile]);
-        common.sendErrorEmail(queue, uploader.item, err.message);
+        common.sendErrorEmail(queue, uploader.item, err.message,processNames.email);
         done(err);
       });
       uploader.on("done", function(message) {
@@ -66,6 +67,7 @@ module.exports = function(queue, cbuploader, globalPath, numberOfProcess) {
         job.data.file,
         job.data.brand.priority,
         delay,
+        processNames.processor,
         function(cb) {
           done(null, item);
           // cb();
