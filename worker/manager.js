@@ -274,7 +274,8 @@ let getFiles = function(brand) {
         let sftp = new SftpClient();
         console.log("connecting to sftp....");
         console.log(brand.ftp);
-        await sftp.connect(brand.ftp).console.log(brand.dir.upload);
+        await sftp.connect(brand.ftp);
+        console.log(brand.dir.upload);
         let getList = await sftp.list(brand.dir.upload);
         console.log(getList);
         resolve(getList);
