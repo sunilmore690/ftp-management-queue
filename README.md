@@ -1,26 +1,10 @@
-# uploader-queue
 
-Initialize uploader queue with kue
+# ftp-management-queue
+
+File Queue Management for FTP/SFTP Server
 ```
 const kue = require('kue');
 let queue = kue.createQueue()
-
-/*Add your code snipped in sendEmail function using any email client*/
-const sendEmail = (job, ctx, done) => {
-   let data = job.data;
-   /*
-    data = {
-     item:<fileName with filePath>
-     err:<errorMessage>,
-     title:<>
-    }
-   
-   */
-    setTimeout(function(){
-        done();
-    },1000)
-};
-
 /*Add your processing file code snippet according to your requirement*/
 const processFile = (params, cb) => {
 
@@ -53,7 +37,10 @@ const options = {
   numberOfProcess: {
     itemsManagerProcess: 1,//concurrency to monitor brand ftp server at a time for newly uploaded file
     fileBatchProcess: 1, //number of file process at a time
-    emailProcess: 2 // concurrency for sending email
+  },
+  processNames:{
+     manager:'manager-queue',//queue name for manager process
+     processor:'processor-queue',//queue name for file processor process
   },
   items: [
     {
@@ -61,6 +48,7 @@ const options = {
       name: "Brand1",
       priority: "normal",//normal,high,medium
       // this used only when file format is xml to determine from which parent tag read the data
+      type:'ftp',//ftp/sftp
       ftp: {
         host: "localhost",
         port: 21,
@@ -77,33 +65,35 @@ const options = {
       }
     }
   ],
-  cbemailfunction: sendEmail,
   customCallback: processFile,
   filePath: __dirname
 };
 
 #initialize uploader queue
-uploader(options)
+const FtpManagementQueue = require('ftp-management-queue')
+FtpManagementQueue(options)
 ```
 
 
-### How Uploader queue Management works?
+### How File Queue Management works?
 
-1. We’ve one scheduler , which will select one brand in sequence from list and add this brand to managerqueue
+1. *Manager Queue* - Monitor for new files in upload dir from multiple FTP server which we've defined in **items** and add those file file processor Queue, while doing it he'll move this file to enqueued dir
+    
+    - Move file from *upload* dir to *enqueued* dir
+    
+2.  *Processor Queue* - Process the file using **customCallback** function given by user.
+      
+      - Move file from enqueued to processing dir
+      - Execute  **customCallback** function on file
+      - Once done move this file to *processed* dir , also move the original file to *backup* dir
+      - If you pass updated file path to callback function then updated file will go to processed dir and original file will go to backup dir
+3. We can define , how many **Manager Queue** and **Processor  Queue** can parallely run in options
 
-2.  For now, we’ve set only one processor for managerqueue . It’ll connect to ftp server &  list down all the Catalog Files from  upload dir for that brand and add these files to another queue 
-catalogbatchqeue and before adding these file to queue ,first we move the file from upload dir to enqueued dir
-
-3. While adding file to the queue we can give priority to that file, So it’ll pick file to process according to priority. 
-
-4.  For now, we’ve set 4 processor for catalogbatchqeue means 4 file will process parallely.
-
-5. In catalogbatchqeue processor perform following things
-
-        1. Move file from enqueued to processing
-        2. Apply Seamless Processing to that file
-        3. Pass this seamless file to Catalog Bash Script 
-            
-        4. After successfully  run Catalog Batch File , move seamless to processed dir and move the actual file to backup dir
-
-   
+  ``` 
+  numberOfProcess: {
+    itemsManagerProcess: 1,//concurrency to monitor brand ftp server at a time for newly uploaded file
+    fileBatchProcess: 1, //number of file process at a time
+    emailProcess: 2 // concurrency for sending email
+  }
+  ```
+  
