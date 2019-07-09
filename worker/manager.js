@@ -45,7 +45,7 @@ function getRandomInt(min, max) {
 let selectRandomBrand = function(queue, brands, fileFormats) {
   let items = brands;
   let length = items.length;
-  let i = getRandomInt(1,length)
+  let i = getRandomInt(0,length-1)
   var brand = items[i];
   // i++;
   console.log("brand", brand.optId);
