@@ -37,14 +37,17 @@ module.exports = function(
 };
 
 var i = 0;
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 let selectRandomBrand = function(queue, brands, fileFormats) {
   let items = brands;
   let length = items.length;
-  if (items.length == i) {
-    i = 0;
-  }
+  let i = getRandomInt(1,length)
   var brand = items[i];
-  i++;
+  // i++;
   console.log("brand", brand.optId);
   let priority = "normal";
   if (brand.priority) {
