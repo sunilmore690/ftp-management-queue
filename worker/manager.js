@@ -36,7 +36,7 @@ module.exports = function(
   processQueue(queue, numberOfProcess);
 };
 
-var i = 0;
+
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
