@@ -231,13 +231,17 @@ let addBrandFileToQueue = function(queue, job, brand, file, priority,processName
                 sftp.end();
                 console.log("calling callback");
                 return callback();
+
               })
               .catch(function(err) {
                 console.log(" 226");
                 console.log(err);
+                callback(callback(e));
+                sftp.end();
               });
           } catch (e) {
             callback(e);
+            sftp.end();
           }
 
           job.log(

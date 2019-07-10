@@ -24,9 +24,9 @@ const deleteLocalFile = function(files) {
     }
   });
 };
-var processNames
+
 module.exports = function(queue, cbuploader, globalPath, numberOfProcess,processname) {
-  processNames = processname
+ let processNames = processname
   console.log(globalPath);
   var brandHash = {};
   queue.process(processNames.processor, numberOfProcess, function(job, ctx, done) {
