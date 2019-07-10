@@ -8,7 +8,7 @@ var path = require("path");
 var supportedFormat;
 
 var kue;
-var processNames;
+
 module.exports = function(
   queue,
   brands,
@@ -18,7 +18,7 @@ module.exports = function(
   processame
 ) {
   kue = Kue;
-  processNames = processame;
+  let processNames = processame;
   supportedFormat = fileFormats;
   console.log("in managaer");
   console.log(supportedFormat);
@@ -26,14 +26,14 @@ module.exports = function(
     cronTime: "*/20 * * * * *", //every 5 second
     onTick: function() {
       console.log("----- Manager Cron ------");
-      selectRandomBrand(queue, brands, fileFormats);
+      selectRandomBrand(queue, brands, fileFormats,processNames);
     },
     start: true,
     timeZone: "America/Los_Angeles"
   });
 
   job.start();
-  processQueue(queue, numberOfProcess);
+  processQueue(queue, numberOfProcess,processNames);
 };
 
 
@@ -42,7 +42,7 @@ function getRandomInt(min, max) {
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-let selectRandomBrand = function(queue, brands, fileFormats) {
+let selectRandomBrand = function(queue, brands, fileFormats,processNames) {
   let items = brands;
   let length = items.length;
   let i = getRandomInt(0,length-1)
@@ -93,7 +93,7 @@ function isFileInSupportedFormat(name) {
   return supportedFormat.indexOf(ext) > -1;
 }
 
-let processQueue = (queue, numberOfProcess) => {
+let processQueue = (queue, numberOfProcess,processNames) => {
   queue.process(processNames.manager, numberOfProcess, async function(
     job,
     ctx,
@@ -110,7 +110,7 @@ let processQueue = (queue, numberOfProcess) => {
     try {
       var old_files = await getFiles(brand);
       setTimeout(function() {
-        manageFiles(queue, old_files, job, brand, done);
+        manageFiles(queue, old_files, job, brand,processNames, done);
       }, 10000);
     } catch (e) {
       console.log("e", e);
@@ -119,7 +119,7 @@ let processQueue = (queue, numberOfProcess) => {
   });
 };
 
-let manageFiles = async function(queue, old_files, job, brand, done) {
+let manageFiles = async function(queue, old_files, job, brand,processNames, done) {
   try {
     var files = [];
     files = await getFiles(brand);
@@ -171,6 +171,7 @@ let manageFiles = async function(queue, old_files, job, brand, done) {
           },
           file,
           priority,
+          processNames,
           cb
         );
       },
@@ -185,7 +186,7 @@ let manageFiles = async function(queue, old_files, job, brand, done) {
   }
 };
 
-let addBrandFileToQueue = function(queue, job, brand, file, priority, cb) {
+let addBrandFileToQueue = function(queue, job, brand, file, priority,processNames, cb) {
   cb = cb || function() {};
   var that = this;
   job.log("----Calling addBrandFileToQueue");
