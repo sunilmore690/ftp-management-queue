@@ -19,7 +19,7 @@ module.exports = function(
 ) {
   kue = Kue;
   let processNames = processame;
-  supportedFormat = fileFormats;
+  // supportedFormat = fileFormats;
   console.log("in managaer");
   console.log(supportedFormat);
   var job = new CronJob({
@@ -33,7 +33,7 @@ module.exports = function(
   });
 
   job.start();
-  processQueue(queue, numberOfProcess,processNames);
+  processQueue(queue, numberOfProcess,processNames,fileFormats);
 };
 
 
@@ -88,12 +88,12 @@ let selectRandomBrand = function(queue, brands, fileFormats,processNames) {
     });
 };
 
-function isFileInSupportedFormat(name) {
+function isFileInSupportedFormat(name,fileFormats) {
   var ext = path.extname(name);
-  return supportedFormat.indexOf(ext) > -1;
+  return fileFormats.indexOf(ext) > -1;
 }
 
-let processQueue = (queue, numberOfProcess,processNames) => {
+let processQueue = (queue, numberOfProcess,processNames,fileFormats) => {
   queue.process(processNames.manager, numberOfProcess, async function(
     job,
     ctx,
@@ -110,7 +110,7 @@ let processQueue = (queue, numberOfProcess,processNames) => {
     try {
       var old_files = await getFiles(brand);
       setTimeout(function() {
-        manageFiles(queue, old_files, job, brand,processNames, done);
+        manageFiles(queue, old_files, job, brand,processNames,fileFormats, done);
       }, 10000);
     } catch (e) {
       console.log("e", e);
@@ -119,7 +119,7 @@ let processQueue = (queue, numberOfProcess,processNames) => {
   });
 };
 
-let manageFiles = async function(queue, old_files, job, brand,processNames, done) {
+let manageFiles = async function(queue, old_files, job, brand,processNames,fileFormats, done) {
   try {
     var files = [];
     files = await getFiles(brand);
@@ -132,7 +132,7 @@ let manageFiles = async function(queue, old_files, job, brand,processNames, done
       if (file.type != "-") return false;
 
       //check supported file format
-      var isFileFormatSupported = isFileInSupportedFormat(file.name);
+      var isFileFormatSupported = isFileInSupportedFormat(file.name,fileFormats);
       if (!isFileFormatSupported) return false;
 
       //  is file ready
