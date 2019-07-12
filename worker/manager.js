@@ -23,7 +23,7 @@ module.exports = function(
   console.log("in managaer");
   console.log(supportedFormat);
   var job = new CronJob({
-    cronTime: "*/20 * * * * *", //every 5 second
+    cronTime: "* * * * * ", //every 5 second
     onTick: function() {
       console.log("----- Manager Cron ------");
       selectRandomBrand(queue, brands, fileFormats,processNames);
@@ -111,7 +111,7 @@ let processQueue = (queue, numberOfProcess,processNames,fileFormats) => {
       var old_files = await getFiles(brand);
       setTimeout(function() {
         manageFiles(queue, old_files, job, brand,processNames,fileFormats, done);
-      }, 10000);
+      }, 1000);
     } catch (e) {
       console.log("e", e);
       done(e);
