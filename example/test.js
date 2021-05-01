@@ -10,7 +10,7 @@ let queue = kue.createQueue({
     //   auth: 'password',
     db: 3, // if provided select a non-default redis db
     options: {
-      // see https://github.com/mranney/node_redis#rediscreateclient
+     
     }
   }
 });
@@ -40,25 +40,30 @@ const processFile = (params, cb) => {
 };
 
 const options = {
+  kue,
   queue,
   fileFormats: [".csv"],
   numberOfProcess: {
     itemsManagerProcess: 1,
     fileBatchProcess: 1,
-    emailProcess: 2
+    emailProcess: 2,
+  },
+  processNames: {
+    manager: "manager-queue", //queue name for manager process
+    processor: "processor-queue", //queue name for file processor process
   },
   items: [
     {
       id: "1",
-      name: "Brand1",
+      name: "job",
       priority: "normal",
-     
+
       ftp: {
-        host: "localhost",
+        host: "<localhost>",
         port: 21,
-        user: "username",
-        password: "password",
-        pass: "password"
+        user: "<user>",
+        password: "<pass>",
+        pass: "<pass>",
       },
       dir: {
         upload: "/upload/",
@@ -66,13 +71,13 @@ const options = {
         processing: "/processing/",
         error: "/error/",
         processed: "/processed/",
-        backup: "/backup/"
-      }
-    }
+        backup: "/backup/",
+      },
+    },
   ],
   cbemailfunction: sendEmail,
   customCallback: processFile,
-  filePath: __dirname
+  filePath: __dirname,
 };
 
 uploader(options);

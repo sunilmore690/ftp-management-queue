@@ -208,9 +208,10 @@ let addBrandFileToQueue = function(queue, job, brand, file, priority,processName
             function(err) {
               if (err) {
                 job.log(err);
-                callback(err);
-              }
-              callback();
+                callback(err);  
+              }else{
+                callback();
+              }         
               ftp.end();
             }
           );
